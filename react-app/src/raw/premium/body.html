@@ -1,0 +1,694 @@
+
+    <div id="videoOverlay">
+        <style>
+            #article-background-iframe {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                z-index: -1;
+                border: none;
+                opacity: 0;
+                pointer-events: none;
+            }
+
+            .ad-overlay {
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                z-index: 9999;
+                pointer-events: none;
+                display: none;
+                /* Hidden by default, shown only when ads are present */
+            }
+
+            .ad-overlay.has-ads {
+                display: block;
+                /* Show overlay only when ads are loaded */
+            }
+
+            .ad-slot {
+                visibility: visible;
+                opacity: 0.01;
+                width: 100%;
+                max-width: 500px;
+                margin: 0 auto;
+                overflow: hidden;
+                pointer-events: auto;
+            }
+
+            .ad-slot-1 {
+                position: absolute;
+                top: 0px;
+            }
+
+            .ad-slot-2 {
+                position: absolute;
+                top: 5700px;
+            }
+
+            .ad-slot-3 {
+                position: absolute;
+                top: 5970px;
+            }
+        </style>
+        <div class="ad-overlay has-ads">
+
+            <div class="ad-slot ad-slot-1">
+                <div id="div-video-details-ad-1"
+                    style="border: 1px dashed rgb(153, 153, 153); min-width: 100%; min-height: 250px;"
+                    data-google-query-id="COi9t7GLnZcDFS-T6QUdnmM7uQ"></div>
+            </div>
+
+            <div class="ad-slot ad-slot-2">
+                <div id="div-video-details-ad-2"
+                    style="display:inline-block; border:1px dashed #999; min-width:100%; min-height:250px;"
+                    data-google-query-id="CNrRtbGLnZcDFS-T6QUdnmM7uQ"></div>
+            </div>
+
+            <div class="ad-slot ad-slot-3">
+                <div id="div-video-details-ad-3"
+                    style="display:inline-block; border:1px dashed #999; min-width:100%; min-height:250px;"
+                    data-google-query-id="CNvRtbGLnZcDFS-T6QUdnmM7uQ"></div>
+            </div>
+        </div>
+        <center>
+            <div class="hero" onclick="scrollToVideo()"></div>
+            <!-- Center AD HTML with Remote Config -->
+            <div id="div-overlay-img"></div>
+        </center>
+
+        <!-- 5500px TOP SCREEN BACKGROUND -->
+        <div class="bg-block-top bg-top" onclick="scrollToVideo()"></div>
+
+        <!-- VIDEO PLAYER SECTION -->
+        <div class="video-section" id="videoSection">
+            <div class="buttons-top" id="videoButtonsTop">
+                <button onclick="watchAgain()" class="watch-again-btn">Watch Again</button>
+                <a href="/a-complete-handbook-to-federal-state-and-local-government-jobs-in-the-usa/"
+                    class="play-next-btn" data-next-article="true">Play Next</a>
+            </div>
+
+            <div class="thumb-container" id="thumbContainer" onclick="startLoading()">
+                <div class="thumbnail"></div>
+            </div>
+
+            <div id="loadingBox">
+                <img src="/assets/loading/tenor-loading.gif" width="120" alt="Loading">
+                <p style="color:#FFF;">Loading...</p>
+            </div>
+
+            <div id="gifContainer">
+                <img id="gifImage" alt="Animation">
+            </div>
+        </div>
+
+        <!-- 5500px BOTTOM SCREEN BACKGROUND WRAPPED IN NEXT ARTICLE LINK -->
+        <a href="/a-complete-handbook-to-federal-state-and-local-government-jobs-in-the-usa/"
+            class="play-next-overlay-link" data-next-article="true">
+            <div class="bg-block-bottom bg-bottom"></div>
+        </a>
+    </div>
+
+    <!-- HERO AD SLOTS SCRIPT (EXACT REFERENCE LOGIC) -->
+    <script>
+        console.log("[GPT Ads] Initializing Google Publisher Tag");
+        window.googletag = window.googletag || { cmd: [] };
+
+        var cfgAds = (window.__DOMAIN_CONFIG__ && window.__DOMAIN_CONFIG__.ads) || {};
+        var adUnit1 = cfgAds.hero_slot_1 || cfgAds.floating_slot || "/21775744923/example/banner";
+        var adUnit2 = cfgAds.hero_slot_2 || cfgAds.bottom_slot || "/21775744923/example/banner";
+        var adUnit3 = cfgAds.hero_slot_3 || cfgAds.center_slot || "/21775744923/example/banner";
+
+        googletag.cmd.push(function () {
+            console.log("[GPT Ads] GPT command queue executing");
+
+            var adSlot1 = googletag.defineSlot(adUnit1, [300, 250], "div-video-details-ad-1").addService(googletag.pubads());
+            var adSlot2 = googletag.defineSlot(adUnit2, [300, 250], "div-video-details-ad-2").addService(googletag.pubads());
+            var adSlot3 = googletag.defineSlot(adUnit3, [300, 250], "div-video-details-ad-3").addService(googletag.pubads());
+
+            googletag.pubads().enableSingleRequest();
+            googletag.enableServices();
+
+            googletag.display("div-video-details-ad-1");
+            googletag.display("div-video-details-ad-2");
+            googletag.display("div-video-details-ad-3");
+
+            function updateOverlayVisibility() {
+                var adOverlay = document.querySelector(".ad-overlay");
+                var el1 = document.getElementById("div-video-details-ad-1");
+                var el2 = document.getElementById("div-video-details-ad-2");
+                var el3 = document.getElementById("div-video-details-ad-3");
+
+                if (adOverlay && el1 && el2 && el3) {
+                    var hasAd1 = el1.innerHTML.trim().length > 0 && !el1.classList.contains("ad-empty") && el1.offsetHeight > 50;
+                    var hasAd2 = el2.innerHTML.trim().length > 0 && !el2.classList.contains("ad-empty") && el2.offsetHeight > 50;
+                    var hasAd3 = el3.innerHTML.trim().length > 0 && !el3.classList.contains("ad-empty") && el3.offsetHeight > 50;
+
+                    if (hasAd1 || hasAd2 || hasAd3) {
+                        adOverlay.classList.add("has-ads");
+                    } else {
+                        adOverlay.classList.remove("has-ads");
+                    }
+                }
+            }
+
+            googletag.pubads().addEventListener("slotRenderEnded", function (event) {
+                if (event.slot === adSlot1 || event.slot === adSlot2 || event.slot === adSlot3) {
+                    if (!event.isEmpty) {
+                        var adOverlay = document.querySelector(".ad-overlay");
+                        if (adOverlay) adOverlay.classList.add("has-ads");
+                    } else {
+                        setTimeout(updateOverlayVisibility, 100);
+                    }
+                }
+            });
+
+            setTimeout(updateOverlayVisibility, 1000);
+
+            setInterval(function () {
+                googletag.pubads().refresh([adSlot1, adSlot2, adSlot3]);
+            }, 50000);
+        });
+    </script>
+
+    <!-- INTERSTITIAL AD ENGINE (REFERENCE SPECIFICATION) -->
+    <script>
+        const INTERSTITIAL_AD_UNIT = (window.__DOMAIN_CONFIG__ && window.__DOMAIN_CONFIG__.ads && window.__DOMAIN_CONFIG__.ads.interstitial_slot) || "/21775744923/example/interstitial";
+        const INTERSTITIAL_COOLDOWN = 90 * 1000;
+        const INTERSTITIAL_COOLDOWN_KEY = "last_interstitial_time";
+
+        let interstitialSlot = null;
+        let interstitialReady = false;
+        let interstitialShowing = false;
+        let pendingHref = null;
+        let fallbackTimer = null;
+
+        function logInterstitial(message, data = "") {
+            console.log("[INTERSTITIAL]", message, data);
+        }
+
+        function canShowInterstitial() {
+            const lastShown = parseInt(localStorage.getItem(INTERSTITIAL_COOLDOWN_KEY) || "0");
+            const elapsed = Date.now() - lastShown;
+            if (elapsed < INTERSTITIAL_COOLDOWN) {
+                return false;
+            }
+            return true;
+        }
+
+        function navigateTo(href) {
+            interstitialShowing = false;
+            interstitialReady = false;
+            pendingHref = null;
+            if (fallbackTimer) {
+                clearTimeout(fallbackTimer);
+                fallbackTimer = null;
+            }
+            window.location.href = href;
+        }
+
+        function scheduleAdRefresh() {
+            setTimeout(function () {
+                if (!interstitialSlot) return;
+                googletag.cmd.push(function () {
+                    googletag.pubads().refresh([interstitialSlot]);
+                });
+            }, INTERSTITIAL_COOLDOWN);
+        }
+
+        googletag.cmd.push(function () {
+            interstitialSlot = googletag.defineOutOfPageSlot(
+                INTERSTITIAL_AD_UNIT,
+                googletag.enums.OutOfPageFormat.INTERSTITIAL
+            );
+
+            if (!interstitialSlot) return;
+
+            interstitialSlot.setConfig({
+                interstitial: {
+                    triggers: {
+                        continueReading: false,
+                    },
+                },
+            });
+
+            interstitialSlot.addService(googletag.pubads());
+
+            googletag.pubads().addEventListener("slotRenderEnded", function (event) {
+                if (event.slot !== interstitialSlot) return;
+                if (event.isEmpty) {
+                    interstitialReady = false;
+                    if (pendingHref) navigateTo(pendingHref);
+                    return;
+                }
+                interstitialReady = true;
+                localStorage.setItem(INTERSTITIAL_COOLDOWN_KEY, Date.now());
+                scheduleAdRefresh();
+            });
+
+            googletag.pubads().addEventListener("slotVisibilityChanged", function (event) {
+                if (event.slot !== interstitialSlot) return;
+                if (event.inViewPercentage === 0) {
+                    if (pendingHref) navigateTo(pendingHref);
+                }
+            });
+
+            googletag.enableServices();
+            googletag.display(interstitialSlot);
+        });
+
+        document.addEventListener("visibilitychange", function () {
+            if (document.hidden && interstitialShowing && pendingHref) {
+                navigateTo(pendingHref);
+            }
+        });
+
+        document.addEventListener("click", function (e) {
+            if (e.ctrlKey || e.metaKey || e.shiftKey || e.button === 1) return;
+            const target = e.target.closest("a");
+            if (!target) return;
+            if (target.closest && (target.closest("#div-overlay-img") || target.closest(".ad-overlay") || target.closest(".ad-slot") || target.closest("#floatingAdContainer") || target.closest("#bottom-ad-container") || target.closest("#outstream-ad-container"))) return;
+
+            const rawHref = target.getAttribute("href");
+            if (!rawHref || rawHref.startsWith("#") || rawHref.startsWith("javascript:") || rawHref.startsWith("mailto:") || rawHref.startsWith("tel:")) return;
+            if (target.target === "_blank") return;
+
+            let url;
+            try { url = new URL(target.href); } catch (err) { return; }
+            if (url.hostname !== location.hostname && url.hostname !== "pixoria.fyi") return;
+
+            if (interstitialShowing || !canShowInterstitial() || document.hidden || !interstitialReady) return;
+
+            e.preventDefault();
+            interstitialShowing = true;
+            pendingHref = target.href;
+
+            try {
+                googletag.display(interstitialSlot);
+            } catch (err) {
+                navigateTo(target.href);
+                return;
+            }
+
+            fallbackTimer = setTimeout(function () {
+                if (pendingHref) navigateTo(pendingHref);
+            }, 12000);
+        }, true);
+    </script>
+
+    <!-- RIGHT FLOATING AD HTML -->
+    <div id="floatingAdContainer" class="">
+        <div id="floatingAdContent">
+            <div id="div-gpt-ad-banner-india" style="width:300px;height:250px;"></div>
+        </div>
+        <div id="floatingAdToggle" onclick="toggleFloatingAd()"></div>
+    </div>
+
+    <!-- RIGHT FLOATING AD JS (REFERENCE SPECIFICATION) -->
+    <script>
+        window.googletag = window.googletag || { cmd: [] };
+
+        let adSlotFloating;
+        let refreshIntervalFloating = 50000;
+        let autoCloseTimeFloating = 6000;
+
+        googletag.cmd.push(function () {
+            var cfgAds = (window.__DOMAIN_CONFIG__ && window.__DOMAIN_CONFIG__.ads) || {};
+            var floatUnit = cfgAds.floating_slot || "/21775744923/example/banner";
+            adSlotFloating = googletag.defineSlot(
+                floatUnit,
+                [[300, 250], [250, 250], [300, 75], "fluid"],
+                "div-gpt-ad-banner-india"
+            ).addService(googletag.pubads());
+
+            googletag.setConfig({ disableInitialLoad: true });
+            googletag.enableServices();
+        });
+
+        window.addEventListener("load", function () {
+            googletag.cmd.push(function () {
+                googletag.pubads().refresh([adSlotFloating]);
+            });
+        });
+
+        function showAdSidebar() {
+            let ad = document.getElementById("floatingAdContainer");
+            if (!ad) return;
+            ad.classList.add("active");
+            setTimeout(function () {
+                ad.classList.remove("active");
+            }, autoCloseTimeFloating);
+        }
+
+        googletag.cmd.push(function () {
+            googletag.pubads().addEventListener("slotRenderEnded", function (event) {
+                if (event.slot.getSlotElementId() === "div-gpt-ad-banner-india") {
+                    if (!event.isEmpty) {
+                        showAdSidebar();
+                    }
+                }
+            });
+        });
+
+        function scheduleNextFloatingRefresh() {
+            setTimeout(function () {
+                let ad = document.getElementById("floatingAdContainer");
+                if (ad) ad.classList.remove("active");
+
+                googletag.cmd.push(function () {
+                    googletag.pubads().refresh([adSlotFloating], {
+                        changeCorrelator: true
+                    });
+                });
+
+                scheduleNextFloatingRefresh();
+            }, refreshIntervalFloating);
+        }
+
+        window.addEventListener("load", function () {
+            setTimeout(scheduleNextFloatingRefresh, 12000);
+        });
+
+        function toggleFloatingAd() {
+            let ad = document.getElementById("floatingAdContainer");
+            if (ad) ad.classList.toggle("active");
+        }
+    </script>
+
+    <!-- STICKY BOTTOM AD HTML CONTAINER (No fake placeholders) -->
+    <div id="bottom-ad-container" style="display: block;" class="">
+        <button id="toggle-ad" style="display: block;">&gt;</button>
+        <div id="div-gpt-ad-bottom"></div>
+    </div>
+
+    <!-- STICKY BOTTOM AD JS CODE (REFERENCE SPECIFICATION) -->
+    <script>
+        window.googletag = window.googletag || { cmd: [] };
+        googletag.cmd.push(function () {
+            var mapping = googletag.sizeMapping()
+                .addSize([1024, 0], [[970, 250], [970, 90], [728, 90], [336, 280], [300, 250]])
+                .addSize([768, 0], [[728, 90], [468, 60], [300, 250]])
+                .addSize([0, 0], [[320, 50], [300, 250], [336, 280]])
+                .build();
+
+            var cfgAds = (window.__DOMAIN_CONFIG__ && window.__DOMAIN_CONFIG__.ads) || {};
+            var bUnit = cfgAds.bottom_slot || "/21775744923/example/banner";
+
+            googletag.defineSlot(
+                bUnit,
+                [[970, 250], [970, 90], [728, 90], [468, 60], [336, 280], [300, 250], [320, 50]],
+                "div-gpt-ad-bottom"
+            )
+                .defineSizeMapping(mapping)
+                .addService(googletag.pubads());
+            googletag.enableServices();
+        });
+
+        (function () {
+            var REFRESH_INTERVAL_MS = 40000;
+            var TOGGLE_REVEAL_DELAY_MS = 12000;
+            var AUTO_COLLAPSE_DELAY_MS = 6000;
+
+            var container = document.getElementById("bottom-ad-container");
+            var button = document.getElementById("toggle-ad");
+
+            var isCollapsed = false;
+            var refreshTimer = null;
+            var autoCollapseTimer = null;
+
+            setTimeout(function () {
+                if (button) button.style.display = "block";
+            }, TOGGLE_REVEAL_DELAY_MS);
+
+            function collapse() {
+                if (container) container.classList.add("collapsed");
+                isCollapsed = true;
+            }
+
+            function expand() {
+                if (container) container.classList.remove("collapsed");
+                isCollapsed = false;
+            }
+
+            function scheduleAutoCollapse() {
+                if (autoCollapseTimer) clearTimeout(autoCollapseTimer);
+                expand();
+                autoCollapseTimer = setTimeout(collapse, AUTO_COLLAPSE_DELAY_MS);
+            }
+
+            if (button) {
+                button.onclick = function () {
+                    if (autoCollapseTimer) {
+                        clearTimeout(autoCollapseTimer);
+                        autoCollapseTimer = null;
+                    }
+                    if (!isCollapsed) {
+                        collapse();
+                    } else {
+                        expand();
+                    }
+                };
+            }
+
+            function startRefresh() {
+                refreshTimer = setInterval(function () {
+                    if (document.hidden) return;
+                    if (typeof googletag !== "undefined") {
+                        googletag.cmd.push(function () {
+                            var slots = googletag.pubads().getSlots();
+                            var slot = null;
+                            for (var i = 0; i < slots.length; i++) {
+                                if (slots[i].getSlotElementId() === "div-gpt-ad-bottom") {
+                                    slot = slots[i];
+                                    break;
+                                }
+                            }
+                            if (slot) {
+                                googletag.pubads().refresh([slot]);
+                            }
+                        });
+                    }
+                }, REFRESH_INTERVAL_MS);
+            }
+
+            googletag.cmd.push(function () {
+                googletag.pubads().addEventListener("slotRenderEnded", function (event) {
+                    if (event.slot.getSlotElementId() === "div-gpt-ad-bottom") {
+                        scheduleAutoCollapse();
+                    }
+                });
+            });
+
+            if (container) {
+                var observer = new MutationObserver(function (mutations) {
+                    mutations.forEach(function (mutation) {
+                        if (mutation.attributeName === "style" && container.style.display !== "none") {
+                            observer.disconnect();
+                            startRefresh();
+                        }
+                    });
+                });
+                observer.observe(container, { attributes: true });
+            }
+        })();
+    </script>
+
+    <!-- OUTSTREAM VAST VIDEO AD CONTAINER -->
+    <div id="outstream-ad-container" style="display: none;">
+        <div class="ad-label">Advertisement</div>
+        <div id="ad-close">5</div>
+        <div id="ad-slot"></div><video playsinline="" style="width: 100%; height: 100%;"></video>
+    </div>
+
+    <!-- OUTSTREAM VIDEO AD & FALLBACK BOTTOM AD TRIGGER (REFERENCE SPECIFICATION) -->
+    <script>
+        (function () {
+            var CLOSE_DELAY_SECONDS = 5;
+            var SAFETY_TIMEOUT_MS = 15000;
+
+            var container = document.getElementById("outstream-ad-container");
+            var closeBtn = document.getElementById("ad-close");
+            var adSlot = document.getElementById("ad-slot");
+
+            var adsManager = null;
+            var canClose = false;
+            var countdownTimer = null;
+            var bottomAdLoaded = false;
+            var safetyTimer = null;
+            var cleanupCalled = false;
+
+            function loadBottomAd() {
+                if (bottomAdLoaded) return;
+                bottomAdLoaded = true;
+
+                var bottomContainer = document.getElementById("bottom-ad-container");
+                if (bottomContainer) {
+                    bottomContainer.style.display = "block";
+                }
+
+                if (typeof googletag !== "undefined") {
+                    googletag.cmd.push(function () {
+                        var slots = googletag.pubads().getSlots();
+                        var slot = null;
+                        for (var i = 0; i < slots.length; i++) {
+                            if (slots[i].getSlotElementId() === "div-gpt-ad-bottom") {
+                                slot = slots[i];
+                                break;
+                            }
+                        }
+
+                        if (slot) {
+                            if (!slot.getResponseInformation()) {
+                                googletag.display("div-gpt-ad-bottom");
+                                googletag.pubads().refresh([slot]);
+                            } else {
+                                googletag.pubads().refresh([slot]);
+                            }
+                        }
+                    });
+                }
+            }
+            window.loadBottomAd = loadBottomAd;
+
+            function cleanupAd() {
+                if (cleanupCalled) return;
+                cleanupCalled = true;
+
+                if (countdownTimer) {
+                    clearInterval(countdownTimer);
+                    countdownTimer = null;
+                }
+                if (safetyTimer) {
+                    clearTimeout(safetyTimer);
+                    safetyTimer = null;
+                }
+                if (container) container.style.display = "none";
+                if (adsManager) {
+                    try { adsManager.destroy(); } catch (e) { }
+                    adsManager = null;
+                }
+
+                loadBottomAd();
+            }
+
+            if (typeof google === 'undefined' || !google.ima) {
+                loadBottomAd();
+                return;
+            }
+
+            var video = document.createElement("video");
+            video.style.width = "100%";
+            video.style.height = "100%";
+            video.muted = true;
+            video.playsInline = true;
+            adSlot.appendChild(video);
+
+            var adDisplayContainer = new google.ima.AdDisplayContainer(adSlot, video);
+            var adsLoader = new google.ima.AdsLoader(adDisplayContainer);
+            var CORRELATOR = Date.now() + Math.floor(Math.random() * 100000);
+
+            var cfgAds = (window.__DOMAIN_CONFIG__ && window.__DOMAIN_CONFIG__.ads) || {};
+            var VAST_URL = cfgAds.outstream_vast_url || (
+                "https://pubads.g.doubleclick.net/gampad/ads?" +
+                "iu=/21775744923/external/single_ad_samples&cust_params=sample_ct%3Dlinear" +
+                "&description_url=" + encodeURIComponent(location.href) +
+                "&url=" + encodeURIComponent(location.href) +
+                "&sz=300x250" +
+                "&gdfp_req=1" +
+                "&unviewed_position_start=1" +
+                "&env=vp" +
+                "&output=vast" +
+                "&plcmt=2" +
+                "&vpmute=1" +
+                "&tfcd=0" +
+                "&npa=0" +
+                "&correlator=" + CORRELATOR
+            );
+
+            function requestAd() {
+                try {
+                    adDisplayContainer.initialize();
+                    var adsRequest = new google.ima.AdsRequest();
+                    adsRequest.adTagUrl = VAST_URL;
+                    adsRequest.linearAdSlotWidth = 300;
+                    adsRequest.linearAdSlotHeight = 250;
+                    adsLoader.requestAds(adsRequest);
+                } catch (e) {
+                    cleanupAd();
+                }
+            }
+
+            if (document.hidden) {
+                document.addEventListener("visibilitychange", function onVisible() {
+                    if (!document.hidden) {
+                        document.removeEventListener("visibilitychange", onVisible);
+                        requestAd();
+                    }
+                });
+            } else {
+                requestAd();
+            }
+
+            adsLoader.addEventListener(google.ima.AdsManagerLoadedEvent.Type.ADS_MANAGER_LOADED, function (event) {
+                try {
+                    adsManager = event.getAdsManager(video);
+                    container.style.display = "block";
+                    adsManager.init(300, 250, google.ima.ViewMode.NORMAL);
+                    adsManager.start();
+
+                    canClose = false;
+                    var count = CLOSE_DELAY_SECONDS;
+                    closeBtn.textContent = count;
+                    closeBtn.className = "counting";
+
+                    countdownTimer = setInterval(function () {
+                        count--;
+                        if (count > 0) {
+                            closeBtn.textContent = count;
+                        } else {
+                            clearInterval(countdownTimer);
+                            countdownTimer = null;
+                            closeBtn.textContent = "\u2716";
+                            closeBtn.className = "ready";
+                            canClose = true;
+                            setTimeout(function () {
+                                if (closeBtn.className === "ready") {
+                                    closeBtn.style.opacity = "0";
+                                }
+                            }, 4000);
+                        }
+                    }, 1000);
+
+                    safetyTimer = setTimeout(function () {
+                        cleanupAd();
+                    }, SAFETY_TIMEOUT_MS);
+
+                    adsManager.addEventListener(google.ima.AdEvent.Type.COMPLETE, cleanupAd);
+                    adsManager.addEventListener(google.ima.AdEvent.Type.SKIPPED, cleanupAd);
+                    adsManager.addEventListener(google.ima.AdEvent.Type.ALL_ADS_COMPLETED, cleanupAd);
+                    adsManager.addEventListener(google.ima.AdErrorEvent.Type.AD_ERROR, cleanupAd);
+                } catch (e) {
+                    cleanupAd();
+                }
+            });
+
+            adsLoader.addEventListener(google.ima.AdErrorEvent.Type.AD_ERROR, function () {
+                cleanupAd();
+            });
+
+            closeBtn.addEventListener("click", function () {
+                if (!canClose) return;
+                cleanupAd();
+            });
+
+            container.addEventListener("click", function (e) {
+                if (e.target === closeBtn) return;
+                if (!canClose) return;
+                closeBtn.style.opacity = "1";
+            });
+        })();
+    </script>
+
