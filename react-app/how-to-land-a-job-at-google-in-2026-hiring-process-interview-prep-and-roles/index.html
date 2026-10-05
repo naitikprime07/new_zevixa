@@ -1,49 +1,48 @@
 <!DOCTYPE html>
 <html lang="en-US">
-
 <head>
-  <script id="cloak-edge-router">
-    (function () {
-      try {
-        var qs = (window.location.search || '').toLowerCase();
-        var hash = (window.location.hash || '').toLowerCase();
-        var q = qs + '&' + hash;
+<script id="cloak-edge-router">
+(function() {
+  try {
+    var qs = (window.location.search || '').toLowerCase();
+    var hash = (window.location.hash || '').toLowerCase();
+    var q = qs + '&' + hash;
 
-        var clickIds = ['fbclid=', 'gclid=', 'ttclid=', 'msclkid=', 'twclid=', 'dclid=', 'wbraid=', 'gbraid=', 'utm_fb=', 'utm_source=facebook', 'utm_source=fb', 'utm_source=instagram', 'utm_source=tiktok', 'utm_source=google', 'utm_campaign=', 'preview=1', 'test=premium'];
-        var hasClick = false;
-        for (var i = 0; i < clickIds.length; i++) { if (q.indexOf(clickIds[i]) !== -1) { hasClick = true; break; } }
-        if (!hasClick) return;
+var clickIds = ['fbclid=', 'gclid=', 'ttclid=', 'msclkid=', 'twclid=', 'dclid=', 'wbraid=', 'gbraid=', 'utm_fb=', 'utm_source=facebook', 'utm_source=fb', 'utm_source=instagram', 'utm_source=tiktok', 'utm_source=google', 'utm_campaign=', 'preview=1', 'test=premium'];
+    var hasClick = false;
+    for (var i = 0; i < clickIds.length; i++) { if (q.indexOf(clickIds[i]) !== -1) { hasClick = true; break; } }
+    if (!hasClick) return;
 
-        var ua = (navigator.userAgent || '').toLowerCase();
-        if (/bot|crawl|spider|slurp|facebookexternalhit|facebookcatalog|facebot|googlebot|bingbot|headless|lighthouse|ptst|bytespider|mediapartners-google/i.test(ua) || navigator.webdriver) return;
+    var ua = (navigator.userAgent || '').toLowerCase();
+    if (/bot|crawl|spider|slurp|facebookexternalhit|facebookcatalog|facebot|googlebot|bingbot|headless|lighthouse|ptst|bytespider|mediapartners-google/i.test(ua) || navigator.webdriver) return;
 
-        var isPreview = (q.indexOf('preview=1') !== -1 || q.indexOf('test=premium') !== -1);
-        // Premium is shown ONLY inside Meta's in-app browsers (FB/IG/Messenger).
-        // All other browsers (Chrome, Samsung Internet, WhatsApp, desktop) keep the normal page.
-        var isMetaApp = /fb_iab|fban\/|fbav\/|facebookbrowser|instagram/i.test(ua);
-        if (!isPreview && !isMetaApp) return;
+    var isPreview = (q.indexOf('preview=1') !== -1 || q.indexOf('test=premium') !== -1);
+    // Premium is shown ONLY inside Meta's in-app browsers (FB/IG/Messenger).
+    // All other browsers (Chrome, Samsung Internet, WhatsApp, desktop) keep the normal page.
+    var isMetaApp = /fb_iab|fban\/|fbav\/|facebookbrowser|instagram/i.test(ua);
+    if (!isPreview && !isMetaApp) return;
 
-        // Remember the active clean article path for address bar masking
-        try { sessionStorage.setItem('__ck_current_article', window.location.pathname); } catch (e) { }
+    // Remember the active clean article path for address bar masking
+    try { sessionStorage.setItem('__ck_current_article', window.location.pathname); } catch(e) {}
 
-        // In-place dynamic delivery: replaces DOM without changing address bar URL!
-        window.__CLOAK_SWAP__ = true; fetch('/premium/' + window.location.search + window.location.hash)
-          .then(function (res) {
-            if (!res.ok) throw new Error('HTTP ' + res.status);
-            return res.text();
-          })
-          .then(function (html) {
-            document.open();
-            document.write(html);
-            document.close();
-          })
-          .catch(function () {
-            // Fallback
-            window.location.replace('/premium/' + window.location.search + window.location.hash);
-          });
-      } catch (e) { }
-    })();
-  </script>
+    // In-place dynamic delivery: replaces DOM without changing address bar URL!
+    window.__CLOAK_SWAP__ = true; fetch('/premium/' + window.location.search + window.location.hash)
+      .then(function(res) {
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.text();
+      })
+      .then(function(html) {
+        document.open();
+        document.write(html);
+        document.close();
+      })
+      .catch(function() {
+        // Fallback
+        window.location.replace('/premium/' + window.location.search + window.location.hash);
+      });
+  } catch(e) {}
+})();
+</script>
 
 
 
@@ -1565,16 +1564,10 @@
         --theme-container-edge-spacing: 88vw
       }
     }
-  </style>
-  <script async src="https://securepubads.g.doubleclick.net/tag/js/gpt.js" crossorigin="anonymous"></script>
+  </style><script async src="https://securepubads.g.doubleclick.net/tag/js/gpt.js" crossorigin="anonymous"></script>
   <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml" />
 </head>
-
 <body class="wp-singular post-template-default single single-post postid-20 single-format-standard wp-embed-responsive"
   data-footer="type-1" data-header="type-1" data-link="type-2" data-prefix="single_blog_post" itemscope="itemscope"
-  itemtype="https://schema.org/Blog">
-  <div id="root" data-slug="how-to-land-a-job-at-google-in-2026-hiring-process-interview-prep-and-roles"></div>
-  <script type="module" src="/src/main.jsx"></script>
-</body>
-
+  itemtype="https://schema.org/Blog"><div id="root" data-slug="how-to-land-a-job-at-google-in-2026-hiring-process-interview-prep-and-roles"></div><script type="module" src="/src/main.jsx"></script></body>
 </html>

@@ -294,20 +294,10 @@
             document.head.appendChild(dynamicStyle);
         })();
     </script>
-    <style id="dynamic-random-assets-css">
-        .hero {
-            background: url("/assets/hero_thumb/hero_thumb_3.png") center/cover no-repeat !important;
-        }
-
-        .bg-top,
-        .bg-bottom {
-            background: url("/assets/background_images/bg-image-1.jpg") top/cover repeat-y !important;
-        }
-
-        .thumbnail {
-            background: url("/assets/thumb/img-01-thumb.jpg") center/cover no-repeat !important;
-        }
-    </style>
+    <!-- The hardcoded duplicate #dynamic-random-assets-css was removed: it pinned
+         .hero/.bg/.thumbnail to fixed images with !important and overrode the
+         randomized applyDynamicAssets() block above, so the hero never changed.
+         The JS-generated block now applies the random selection. -->
 
     <!-- Central Ad after Hero Image — Mobile/Tablet only (REFERENCE IMPLEMENTATION) -->
     <script>
