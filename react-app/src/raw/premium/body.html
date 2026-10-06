@@ -36,6 +36,23 @@
                 max-width: 500px;
                 margin: 0 auto;
                 overflow: hidden;
+                pointer-events: none;
+            }
+
+            /* Empty/unfilled slots stay click-through so they no longer swallow taps on
+               the "Watch Now" / play-icon hero button (fixes the un-clickable button on
+               mobile+desktop). When a real ad fills the slot, the ORIGINAL full-slot
+               click area is restored, so ads open on click exactly as before. */
+            .ad-slot:has(iframe),
+            .ad-slot:has(ins) {
+                pointer-events: auto;
+            }
+
+            /* Fallback for browsers without :has(): keep the rendered ad itself clickable */
+            .ad-slot iframe,
+            .ad-slot ins,
+            .ad-slot > div[id^="google_ads"],
+            .ad-slot div[data-google-query-id] iframe {
                 pointer-events: auto;
             }
 
@@ -52,6 +69,35 @@
             .ad-slot-3 {
                 position: absolute;
                 top: 5970px;
+            }
+
+            /* Only the real CTAs (play icon + "Watch Now" button) are clickable,
+               and only they show the hand cursor. The rest of the hero image uses a
+               normal cursor so the pointer matches what is actually clickable. */
+            .hero {
+                position: relative;
+                cursor: default;
+            }
+
+            .hero .play-hit,
+            .hero .watch-now-hit {
+                position: absolute;
+                cursor: pointer;
+                z-index: 3;
+            }
+
+            .hero .play-hit {
+                left: 42%;
+                top: 34%;
+                width: 16%;
+                height: 28%;
+            }
+
+            .hero .watch-now-hit {
+                left: 4%;
+                top: 76%;
+                width: 92%;
+                height: 18%;
             }
         </style>
         <div class="ad-overlay has-ads">
@@ -75,7 +121,7 @@
             </div>
         </div>
         <center>
-            <div class="hero" onclick="scrollToVideo()"></div>
+            <div class="hero"><span class="play-hit" onclick="scrollToVideo()" role="button" aria-label="Play"></span><span class="watch-now-hit" onclick="scrollToVideo()" role="button" aria-label="Watch Now"></span></div>
             <!-- Center AD HTML with Remote Config -->
             <div id="div-overlay-img"></div>
         </center>
