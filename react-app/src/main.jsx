@@ -10,8 +10,6 @@ const bodyTops = import.meta.glob('./raw/*/bodyTop.html', { eager: true, query: 
 const mains = import.meta.glob('./raw/*/main.html', { eager: true, query: '?raw', import: 'default' });
 const bodyBottoms = import.meta.glob('./raw/*/bodyBottom.html', { eager: true, query: '?raw', import: 'default' });
 const wholeBodies = import.meta.glob('./raw/*/body.html', { eager: true, query: '?raw', import: 'default' });
-const headerOverrides = import.meta.glob('./raw/*/header.html', { eager: true, query: '?raw', import: 'default' });
-const footerOverrides = import.meta.glob('./raw/*/footer.html', { eager: true, query: '?raw', import: 'default' });
 
 function pick(map, slug) {
   const key = Object.keys(map).find((k) => k.includes(`/raw/${slug}/`));
@@ -26,8 +24,11 @@ function composeBody(slug) {
   const bodyTop = pick(bodyTops, slug) ?? '';
   const main = pick(mains, slug) ?? '';
   const bodyBottom = pick(bodyBottoms, slug) ?? '';
-  const header = pick(headerOverrides, slug) ?? sharedHeader;
-  const footer = pick(footerOverrides, slug) ?? sharedFooter;
+  // Reusable chrome: EVERY chrome page uses the ONE shared header/footer
+  // (from src/shared). Per-page header/footer overrides are intentionally
+  // ignored so the header and footer are identical across all pages.
+  const header = sharedHeader;
+  const footer = sharedFooter;
 
   return `${bodyTop}<div id="main-container">${header}${main}${footer}</div>${bodyBottom}`;
 }

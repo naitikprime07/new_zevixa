@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Make the pixoria clone fully offline.
+Make the Zevixa clone fully offline.
 
 - Scans every HTML file under site/
 - Downloads all asset subresources (css/js/images/fonts/json) into site/_assets/<host>/<path>

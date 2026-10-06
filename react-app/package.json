@@ -1,9 +1,9 @@
 {
-  "name": "pixoria-react",
+  "name": "zevixa-react",
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "React (MPA) conversion of the static Pixoria site. Faithful, behavior-preserving.",
+  "description": "React (MPA) conversion of the static Zevixa site. Faithful, behavior-preserving.",
   "scripts": {
     "generate": "node tools/generate.mjs",
     "dev": "node tools/generate.mjs && vite",

@@ -43,12 +43,22 @@ function describe(file) {
 const MC_OPEN = '<div id="main-container">';
 
 // The premium page's hero/background/thumbnail/GIF assets are referenced from
-// the remote BunnyCDN (pixoria-dashboard.b-cdn.net), which blocks hotlinked
+// the remote BunnyCDN (zevixa.b-cdn.net), which blocks hotlinked
 // image requests from other origins -> the page renders solid black. Local
 // copies of every one of those files ship with the site, so we localize the
 // base URL to the self-hosted /assets/ path (public/assets mirrors this layout).
 const CDN_BASE = 'https://pixoria-dashboard.b-cdn.net/assets/';
 const LOCAL_BASE = '/assets/';
+// The offline-mirrored chrome-page assets live under a folder literally named
+// after the original BunnyCDN host. That host string is invisible infra (not
+// branding), but the owner rebranded Pixoria -> Zevixa and wants the word
+// "pixoria" gone from asset URLs too. We rename the local mirror segment
+// pixoria-dashboard.b-cdn.net -> zevixa.b-cdn.net at generation time so every
+// chrome entry / raw fragment references the new path. The physical folder in
+// public/_assets is renamed to match. (Rebrand-safe: only the path segment
+// changes; bytes/CSS/JS are identical.)
+const MIRROR_BASE = '/_assets/pixoria-dashboard.b-cdn.net/';
+const MIRROR_NEW = '/_assets/zevixa.b-cdn.net/';
 // The premium loading spinner also points at an external host; a local copy is
 // shipped, so point it same-origin too (fully offline).
 const REMOTE_LOADING = 'https://media.tenor.com/WX_LDjYUrMsAAAAj/loading.gif';
@@ -62,10 +72,28 @@ const CLOAK_FETCH = "fetch('/premium/' + window.location.search + window.locatio
 const CLOAK_SWAP_FLAG = "window.__CLOAK_SWAP__ = true; ";
 
 function parse(rawText) {
-  const text = rawText
+  let text = rawText
     .split(CDN_BASE).join(LOCAL_BASE)
+    .split(MIRROR_BASE).join(MIRROR_NEW)
     .split(REMOTE_LOADING).join(LOCAL_LOADING)
     .split(CLOAK_FETCH).join(CLOAK_SWAP_FLAG + CLOAK_FETCH);
+  // Rebrand the stale source-of-truth (site/ still says "Pixoria") to Zevixa at
+  // generation time, so `npm run dev`/`build` (which run this generator) can
+  // NEVER revert react-app back to Pixoria. Domain pixoria.fyi -> zevixa.site.
+  // Case-sensitive on purpose: capital "Pixoria" = the visible brand word; the
+  // lowercase CDN segment "pixoria-dashboard" is handled by MIRROR above and is
+  // left untouched. This mirrors exactly how the working react-app was branded.
+  text = text.split('pixoria.fyi').join('zevixa.site');
+  text = text.split('Pixoria').join('Zevixa');
+  // Premium fix #1: remove the hardcoded #dynamic-random-assets-css override
+  // that pins .hero to one image and defeats the randomized hero ("stuck hero").
+  text = text.replace(/<style id="dynamic-random-assets-css">[\s\S]*?hero_thumb_3\.png[\s\S]*?<\/style>\s*/i, '');
+  // Premium fix #2: advance to the next clip + sync the preview thumbnail on
+  // each play (mediaIndex was frozen at 0 -> same gif every time).
+  text = text.replace(
+    /if \(gc\) gc\.style\.display = "none";(\s*)var tc = document\.getElementById\("thumbContainer"\);/,
+    'if (gc) gc.style.display = "none";$1mediaIndex = (mediaIndex + 1) % MEDIA_SET.length;$1var thumb = document.querySelector("#thumbContainer .thumbnail");$1if (thumb && MEDIA_SET[mediaIndex]) {$1    thumb.style.setProperty("background", \'url("\' + MEDIA_SET[mediaIndex].thumb + \'") center/cover no-repeat\', "important");$1}$1var tc = document.getElementById("thumbContainer");'
+  );
   const htmlOpen = (text.match(/<html\b[^>]*>/i) || ['<html lang="en-US">'])[0];
   const doctype = (text.match(/<!doctype html>/i) || ['<!doctype html>'])[0];
 
@@ -140,9 +168,10 @@ for (const p of parsed) {
     writeFile(join(rawDir, 'bodyTop.html'), p.chrome.bodyTop);
     writeFile(join(rawDir, 'main.html'), p.chrome.main);
     writeFile(join(rawDir, 'bodyBottom.html'), p.chrome.bodyBottom);
-    // Per-page chrome override only when it differs from the shared baseline.
-    if (p.chrome.header !== sharedHeader) { writeFile(join(rawDir, 'header.html'), p.chrome.header); headerOverrides++; }
-    if (p.chrome.footer !== sharedFooter) { writeFile(join(rawDir, 'footer.html'), p.chrome.footer); footerOverrides++; }
+    // Chrome is now fully reusable: EVERY page renders the ONE shared header +
+    // footer (src/shared). main.jsx always uses the shared baseline, so per-page
+    // header.html / footer.html overrides are intentionally NOT emitted anymore.
+    // (bodyTop / main / bodyBottom stay per-page - they carry page-specific content.)
   } else {
     wholeCount++;
     writeFile(join(rawDir, 'body.html'), p.parts.bodyInner);

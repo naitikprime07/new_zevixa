@@ -45,7 +45,7 @@ export async function executeScripts(scriptEls) {
     } catch (e) {
       // Syntax/runtime error in one script must not stop the others (as in a browser).
       // eslint-disable-next-line no-console
-      console.error('[pixoria] script execution isolated an error:', e && e.message);
+      console.error('[Zevixa] script execution isolated an error:', e && e.message);
     }
   }
 }
