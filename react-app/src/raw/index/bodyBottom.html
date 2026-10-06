@@ -161,7 +161,7 @@
     id="ct-scripts-js-extra">var ct_localizations = { "ajax_url": "", "public_url": "/assets/wp-content/themes/blocksy/static/bundle/", "rest_url": "", "search_url": "https://zevixa.site/search/QUERY_STRING/", "show_more_text": "Show more", "more_text": "More", "search_live_results": "Search results", "search_live_no_results": "No results", "search_live_results_closed": "Search results closed.", "search_live_no_result": "No results", "search_live_one_result": "You got %s result. Please press Tab to select it.", "search_live_many_results": "You got %s results. Please press Tab to select one.", "search_live_stock_status_texts": { "instock": "In stock", "outofstock": "Out of stock" }, "clipboard_copied": "Copied!", "clipboard_failed": "Failed to Copy", "expand_submenu": "Expand dropdown menu", "collapse_submenu": "Collapse dropdown menu", "dynamic_js_chunks": [], "dynamic_styles": { "lazy_load": "/_assets/zevixa.b-cdn.net/assets/wp-content/themes/blocksy/static/bundle/52bb3edf1f9f83ba_non-critical-styles.min.css.css", "search_lazy": "/_assets/zevixa.b-cdn.net/assets/wp-content/themes/blocksy/static/bundle/ebb61d93edd76ff4_non-critical-search-styles.min.css.css", "back_to_top": "/_assets/zevixa.b-cdn.net/assets/wp-content/themes/blocksy/static/bundle/ffb0127023a0413f_back-to-top.min.css.css" }, "dynamic_styles_selectors": [{ "selector": ".ct-header-cart, #woo-cart-panel", "url": "/_assets/zevixa.b-cdn.net/assets/wp-content/themes/blocksy/static/bundle/0f79b95141633f83_cart-header-element-lazy.min.css.css" }, { "selector": ".flexy", "url": "/_assets/zevixa.b-cdn.net/assets/wp-content/themes/blocksy/static/bundle/0b9cb8faaf375766_flexy.min.css.css" }, { "selector": ".ct-pagination", "url": "/_assets/zevixa.b-cdn.net/assets/wp-content/themes/blocksy/static/bundle/120030a165988c47_pagination.min.css.css" }] }</script>
   <script data-optimized="1" id="ct-scripts-js"
     src="/_assets/zevixa.b-cdn.net/assets/wp-content/litespeed/js/c8d47ac95d9260de_84ca61aeab447ddda4260a1fffafc4e5.js.js"></script>
-  <script>const INTERSTITIAL_AD_UNIT = "/21775744923/example/interstitial"; const INTERSTITIAL_COOLDOWN = 90 * 1000; const INTERSTITIAL_COOLDOWN_KEY = "last_interstitial_time"; let interstitialSlot = null; let interstitialReady = !1; let interstitialShowing = !1; let pendingHref = null; let fallbackTimer = null; function logInterstitial(message, data = "") { }
+  <script>const INTERSTITIAL_AD_UNIT = "/23378750337/zevixa_interstitial"; const INTERSTITIAL_COOLDOWN = 90 * 1000; const INTERSTITIAL_COOLDOWN_KEY = "last_interstitial_time"; let interstitialSlot = null; let interstitialReady = !1; let interstitialShowing = !1; let pendingHref = null; let fallbackTimer = null; function logInterstitial(message, data = "") { }
     function canShowInterstitial() {
       const lastShown = parseInt(localStorage.getItem(INTERSTITIAL_COOLDOWN_KEY) || "0"); const elapsed = Date.now() - lastShown; if (elapsed < INTERSTITIAL_COOLDOWN) { logInterstitial("Cooldown active", Math.ceil((INTERSTITIAL_COOLDOWN - elapsed) / 1000) + " sec remaining"); return !1 }
       return !0
@@ -288,7 +288,7 @@
     /* DEFINE SLOT */
     googletag.cmd.push(function () {
       floatingAdSlot = googletag.defineSlot(
-        "/21775744923/example/banner",
+        "/23378750337/zevixa_floating",
         [[300, 250], [250, 250], [300, 75], "fluid"],
         "div-gpt-ad-banner-india"
       ).addService(googletag.pubads());
@@ -421,7 +421,7 @@
       transform: rotate(90deg)
     }
   </style>
-  <script>window.googletag = window.googletag || { cmd: [] }; googletag.cmd.push(function () { var mapping = googletag.sizeMapping().addSize([1024, 0], [[970, 250], [970, 90], [728, 90], [336, 280], [300, 250]]).addSize([768, 0], [[728, 90], [468, 60], [300, 250]]).addSize([0, 0], [[320, 50], [300, 250], [336, 280]]).build(); googletag.defineSlot("/21775744923/example/banner", [[970, 250], [970, 90], [728, 90], [468, 60], [336, 280], [300, 250], [320, 50]], "div-gpt-ad-bottom").defineSizeMapping(mapping).addService(googletag.pubads()); googletag.enableServices() })</script>
+  <script>window.googletag = window.googletag || { cmd: [] }; googletag.cmd.push(function () { var mapping = googletag.sizeMapping().addSize([1024, 0], [[970, 250], [970, 90], [728, 90], [336, 280], [300, 250]]).addSize([768, 0], [[728, 90], [468, 60], [300, 250]]).addSize([0, 0], [[320, 50], [300, 250], [336, 280]]).build(); googletag.defineSlot("/23378750337/zevixa_bottom", [[970, 250], [970, 90], [728, 90], [468, 60], [336, 280], [300, 250], [320, 50]], "div-gpt-ad-bottom").defineSizeMapping(mapping).addService(googletag.pubads()); googletag.enableServices() })</script>
   <script>(function () {
               var REFRESH_INTERVAL_MS = 40000; var TOGGLE_REVEAL_DELAY_MS = 12000; var AUTO_COLLAPSE_DELAY_MS = 6000; var container = document.getElementById("bottom-ad-container"); var button = document.getElementById("toggle-ad"); var isCollapsed = !1; var refreshTimer = null; var autoCollapseTimer = null; var ourSlot = null; setTimeout(function () { button.style.display = "block" }, TOGGLE_REVEAL_DELAY_MS); function collapse() { container.classList.add("collapsed"); isCollapsed = !0 }
               function expand() { container.classList.remove("collapsed"); isCollapsed = !1 }
@@ -538,7 +538,7 @@
   <script>(function () {
               var CLOSE_DELAY_SECONDS = 5; var SAFETY_TIMEOUT_MS = 15000; var container = document.getElementById("outstream-ad-container"); var closeBtn = document.getElementById("ad-close"); var adSlot = document.getElementById("ad-slot"); var adsManager = null; var canClose = !1; var countdownTimer = null; var bottomAdLoaded = !1; var safetyTimer = null; var cleanupCalled = !1; var video = document.createElement("video"); video.style.width = "100%"; video.style.height = "100%"; video.muted = !0; video.playsInline = !0; adSlot.appendChild(video); var adDisplayContainer = new google.ima.AdDisplayContainer(adSlot, video); var adsLoader = new google.ima.AdsLoader(adDisplayContainer); var CORRELATOR = Date.now() + Math.floor(Math.random() * 100000); var VAST_URL =
                 "https://pubads.g.doubleclick.net/gampad/ads?" +
-                "iu=/21775744923/external/single_preroll_skippable" +
+                "iu=/23378750337/zevixa_video_outstream&description_url=http%3A%2F%2Fzevixa.site&tfcd=0&npa=0" +
                 "&sz=640x480" +
                 "&gdfp_req=1" +
                 "&output=vast" +

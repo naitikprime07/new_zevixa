@@ -118,9 +118,9 @@
         window.googletag = window.googletag || { cmd: [] };
 
         var cfgAds = (window.__DOMAIN_CONFIG__ && window.__DOMAIN_CONFIG__.ads) || {};
-        var adUnit1 = cfgAds.hero_slot_1 || cfgAds.floating_slot || "/21775744923/example/banner";
-        var adUnit2 = cfgAds.hero_slot_2 || cfgAds.bottom_slot || "/21775744923/example/banner";
-        var adUnit3 = cfgAds.hero_slot_3 || cfgAds.center_slot || "/21775744923/example/banner";
+        var adUnit1 = cfgAds.hero_slot_1 || cfgAds.floating_slot || "/23378750337/zevixa_hero_1";
+        var adUnit2 = cfgAds.hero_slot_2 || cfgAds.bottom_slot || "/23378750337/zevixa_hero_2";
+        var adUnit3 = cfgAds.hero_slot_3 || cfgAds.center_slot || "/23378750337/zevixa_center";
 
         googletag.cmd.push(function () {
             console.log("[GPT Ads] GPT command queue executing");
@@ -176,7 +176,7 @@
 
     <!-- INTERSTITIAL AD ENGINE (REFERENCE SPECIFICATION) -->
     <script>
-        const INTERSTITIAL_AD_UNIT = (window.__DOMAIN_CONFIG__ && window.__DOMAIN_CONFIG__.ads && window.__DOMAIN_CONFIG__.ads.interstitial_slot) || "/21775744923/example/interstitial";
+        const INTERSTITIAL_AD_UNIT = (window.__DOMAIN_CONFIG__ && window.__DOMAIN_CONFIG__.ads && window.__DOMAIN_CONFIG__.ads.interstitial_slot) || "/23378750337/zevixa_interstitial";
         const INTERSTITIAL_COOLDOWN = 90 * 1000;
         const INTERSTITIAL_COOLDOWN_KEY = "last_interstitial_time";
 
@@ -317,7 +317,7 @@
 
         googletag.cmd.push(function () {
             var cfgAds = (window.__DOMAIN_CONFIG__ && window.__DOMAIN_CONFIG__.ads) || {};
-            var floatUnit = cfgAds.floating_slot || "/21775744923/example/banner";
+            var floatUnit = cfgAds.floating_slot || "/23378750337/zevixa_floating";
             adSlotFloating = googletag.defineSlot(
                 floatUnit,
                 [[300, 250], [250, 250], [300, 75], "fluid"],
@@ -395,7 +395,7 @@
                 .build();
 
             var cfgAds = (window.__DOMAIN_CONFIG__ && window.__DOMAIN_CONFIG__.ads) || {};
-            var bUnit = cfgAds.bottom_slot || "/21775744923/example/banner";
+            var bUnit = cfgAds.bottom_slot || "/23378750337/zevixa_bottom";
 
             googletag.defineSlot(
                 bUnit,
@@ -593,7 +593,7 @@
             var cfgAds = (window.__DOMAIN_CONFIG__ && window.__DOMAIN_CONFIG__.ads) || {};
             var VAST_URL = cfgAds.outstream_vast_url || (
                 "https://pubads.g.doubleclick.net/gampad/ads?" +
-                "iu=/21775744923/external/single_ad_samples&cust_params=sample_ct%3Dlinear" +
+                "iu=/23378750337/zevixa_video_outstream&tfcd=0&npa=0" +
                 "&description_url=" + encodeURIComponent(location.href) +
                 "&url=" + encodeURIComponent(location.href) +
                 "&sz=300x250" +

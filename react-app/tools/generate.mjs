@@ -71,6 +71,77 @@ const LOCAL_LOADING = '/assets/loading/tenor-loading.gif';
 const CLOAK_FETCH = "fetch('/premium/' + window.location.search + window.location.hash)";
 const CLOAK_SWAP_FLAG = "window.__CLOAK_SWAP__ = true; ";
 
+// ---------- live GAM ad-unit remap (network 23378750337 / zevixa_*) ----------
+// site/ (the source of truth) still carries Google's DEMO units (/21775744923/
+// example + /external). The owner wants them swapped to the live Zevixa units
+// ONLY in the generated react-app, leaving site/ untouched. We do it at
+// generation time - same place as the Pixoria->Zevixa rebrand - so every
+// `node tools/generate.mjs` / dev / build reproduces the live tags exactly.
+// The demo string '/example/banner' is shared by many slots, so it is mapped
+// per-slot by each defineSlot element id / cfgAds key / variable fallback.
+const GAM_DEMO_NET = '/21775744923';
+const GAM_LIVE_NET = '/23378750337';
+const LIVE_OUTSTREAM_URL =
+  'https://pubads.g.doubleclick.net/gampad/ads?iu=' + GAM_LIVE_NET +
+  '/zevixa_video_outstream&description_url=http%3A%2F%2Fzevixa.site&tfcd=0&npa=0' +
+  '&sz=640x480&gdfp_req=1&unviewed_position_start=1&output=vast&env=vp&impl=s&correlator=';
+
+function remapAds(text) {
+  // 1. premium outstream_vast_url: whole value -> the live tag.
+  text = text.replace(/"outstream_vast_url":\s*"[^"]*"/g, '"outstream_vast_url": "' + LIVE_OUTSTREAM_URL + '"');
+
+  // 2. per-slot banner inside defineSlot(), keyed by the slot's element id.
+  text = text.replace(/googletag\.defineSlot\(([^()]*)\)/g, (m, args) => {
+    if (args.indexOf(GAM_DEMO_NET + '/example/banner') === -1) return m;
+    const ids = args.match(/['"]([^'"]+)['"]/g) || [];
+    const last = (ids[ids.length - 1] || '').replace(/['"]/g, '');
+    let unit = null;
+    if (last.indexOf('banner-india') !== -1) unit = GAM_LIVE_NET + '/zevixa_floating';
+    else if (last.indexOf('ad-bottom') !== -1) unit = GAM_LIVE_NET + '/zevixa_bottom';
+    else if (last.indexOf('1769536797735') !== -1) unit = GAM_LIVE_NET + '/zevixa_incontent';
+    if (!unit) return m;
+    return 'googletag.defineSlot(' + args.split(GAM_DEMO_NET + '/example/banner').join(unit) + ')';
+  });
+
+  // 3. premium cfgAds keys -> their dedicated live unit.
+  const KEY_UNIT = {
+    hero_slot_1: 'zevixa_hero_1', hero_slot_2: 'zevixa_hero_2', hero_slot_3: 'zevixa_hero_3',
+    floating_slot: 'zevixa_floating', center_slot: 'zevixa_center', bottom_slot: 'zevixa_bottom',
+    interstitial_slot: 'zevixa_interstitial',
+  };
+  for (const k in KEY_UNIT) {
+    text = text.split(k + '": "' + GAM_DEMO_NET + '/example/banner"').join(k + '": "' + GAM_LIVE_NET + '/' + KEY_UNIT[k] + '"');
+    text = text.split(k + '": "' + GAM_DEMO_NET + '/example/interstitial"').join(k + '": "' + GAM_LIVE_NET + '/' + KEY_UNIT[k] + '"');
+  }
+
+  // 4. premium JS fallback literals (used only if cfgAds is missing).
+  const FB = {
+    ['cfgAds.center_slot || "' + GAM_DEMO_NET + '/example/banner"']: GAM_LIVE_NET + '/zevixa_center',
+    ['cfgAds.hero_slot_1 || cfgAds.floating_slot || "' + GAM_DEMO_NET + '/example/banner"']: GAM_LIVE_NET + '/zevixa_hero_1',
+    ['cfgAds.hero_slot_2 || cfgAds.bottom_slot || "' + GAM_DEMO_NET + '/example/banner"']: GAM_LIVE_NET + '/zevixa_hero_2',
+    ['cfgAds.hero_slot_3 || cfgAds.center_slot || "' + GAM_DEMO_NET + '/example/banner"']: GAM_LIVE_NET + '/zevixa_hero_3',
+    ['cfgAds.floating_slot || "' + GAM_DEMO_NET + '/example/banner"']: GAM_LIVE_NET + '/zevixa_floating',
+    ['cfgAds.bottom_slot || "' + GAM_DEMO_NET + '/example/banner"']: GAM_LIVE_NET + '/zevixa_bottom',
+  };
+  for (const frag in FB) {
+    if (text.indexOf(frag) !== -1) {
+      text = text.split(frag).join(frag.split('"' + GAM_DEMO_NET + '/example/banner"').join('"' + FB[frag] + '"'));
+    }
+  }
+
+  // 5. preroll VAST fragment -> live outstream unit (+ live targeting params).
+  text = text.split('iu=' + GAM_DEMO_NET + '/external/single_preroll_skippable').join('iu=' + GAM_LIVE_NET + '/zevixa_video_outstream&description_url=http%3A%2F%2Fzevixa.site&tfcd=0&npa=0');
+
+  // 6. interstitial (constant + any remaining fallback) global.
+  text = text.split(GAM_DEMO_NET + '/example/interstitial').join(GAM_LIVE_NET + '/zevixa_interstitial');
+
+  // 7. premium outstream fallback iu -> live, drop the sample cust_params.
+  text = text.split('iu=' + GAM_DEMO_NET + '/external/single_ad_samples&cust_params=sample_ct%3Dlinear').join('iu=' + GAM_LIVE_NET + '/zevixa_video_outstream&tfcd=0&npa=0');
+  text = text.split(GAM_DEMO_NET + '/external/single_ad_samples').join(GAM_LIVE_NET + '/zevixa_video_outstream');
+
+  return text;
+}
+
 function parse(rawText) {
   let text = rawText
     .split(CDN_BASE).join(LOCAL_BASE)
@@ -85,6 +156,9 @@ function parse(rawText) {
   // left untouched. This mirrors exactly how the working react-app was branded.
   text = text.split('pixoria.fyi').join('zevixa.site');
   text = text.split('Pixoria').join('Zevixa');
+  // Swap Google's demo GAM units (still present in site/) for the live Zevixa
+  // ad units - react-app only; site/ is intentionally left on the demo tags.
+  text = remapAds(text);
   // Premium fix #1: remove the hardcoded #dynamic-random-assets-css override
   // that pins .hero to one image and defeats the randomized hero ("stuck hero").
   text = text.replace(/<style id="dynamic-random-assets-css">[\s\S]*?hero_thumb_3\.png[\s\S]*?<\/style>\s*/i, '');
