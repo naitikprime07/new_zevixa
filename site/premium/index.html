@@ -543,8 +543,10 @@
             right: 0;
             z-index: 9999;
             pointer-events: none;
-            display: none;
-            /* Shown when ads are present */
+            /* Keep it laid out: hiding it would zero the creative's size and make a
+               late-loading ad permanently undetectable (tap would wrongly scroll). Slot
+               clickability is gated per-slot by .ad-filled instead. */
+            display: block;
         }
 
         .ad-overlay.has-ads {
@@ -819,8 +821,9 @@
                 right: 0;
                 z-index: 9999;
                 pointer-events: none;
-                display: none;
-                /* Hidden by default, shown only when ads are present */
+                /* Always laid out so late-sized creatives stay measurable; clickability
+                   is controlled per-slot by .ad-filled. */
+                display: block;
             }
 
             .ad-overlay.has-ads {
@@ -1003,7 +1006,13 @@
                 if (event.slot === adSlot1 || event.slot === adSlot2 || event.slot === adSlot3) {
                     var inner = document.getElementById(event.slot.getSlotElementId());
                     if (inner) inner.setAttribute("data-gpt-filled", event.isEmpty ? "0" : "1");
-                    setTimeout(updateOverlayVisibility, event.isEmpty ? 100 : 50);
+                    if (!event.isEmpty) {
+                        // A creative iframe often sizes AFTER render; re-check a few times so
+                        // a real ad is marked .ad-filled (clickable) and opens on tap.
+                        [50, 250, 600, 1200, 2000].forEach(function (d) { setTimeout(updateOverlayVisibility, d); });
+                    } else {
+                        setTimeout(updateOverlayVisibility, 100);
+                    }
                 }
             });
 
@@ -1031,7 +1040,7 @@
             }, false);
 
             setTimeout(updateOverlayVisibility, 1000);
-            setInterval(updateOverlayVisibility, 3000);
+            setInterval(updateOverlayVisibility, 1500);
 
             setInterval(function () {
                 googletag.pubads().refresh([adSlot1, adSlot2, adSlot3]);
