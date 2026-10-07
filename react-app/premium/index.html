@@ -313,7 +313,15 @@
     <script>
         function scrollToVideo() {
             var sec = document.getElementById("videoSection");
-            if (sec) sec.scrollIntoView({ behavior: "smooth" });
+            if (!sec) return;
+            // scrollIntoView can no-op on a tall absolutely-positioned overlay on some
+            // mobile/Chrome engines; compute the absolute offset and scroll explicitly.
+            var top = sec.getBoundingClientRect().top + (window.pageYOffset || document.documentElement.scrollTop || 0);
+            try {
+                window.scrollTo({ top: top, behavior: "smooth" });
+            } catch (e) {
+                window.scrollTo(0, top);
+            }
         }
 
         // When NO real ad is loaded behind the hero, a tap must SCROLL - on every
