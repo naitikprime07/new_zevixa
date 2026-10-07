@@ -1,6 +1,5 @@
 <!doctype html>
 <html lang="en-US">
-
 <head>
     <meta charset="utf-8">
     <script id="cloak-guard">
@@ -317,6 +316,27 @@
             if (sec) sec.scrollIntoView({ behavior: "smooth" });
         }
 
+        // Meta in-app browsers must ALWAYS "open a landing" on a hero/game tap: the
+        // served ad (handled by the ad-slot itself) if one filled, otherwise the
+        // configured sponsor landing URL. Non-Meta / desktop preview keeps the safe
+        // "no ad -> scroll" fallback so the flow can still be tested without leaving.
+        function isMetaInAppBrowser() {
+            try { return /fb_iab|fban\/|fbav\/|facebookbrowser|instagram/i.test(navigator.userAgent); } catch (e) { return false; }
+        }
+        function getSponsorClickUrl() {
+            try {
+                var cfg = window.__DOMAIN_CONFIG__ && window.__DOMAIN_CONFIG__.ads;
+                return (cfg && cfg.sponsor_click_url) || null;
+            } catch (e) { return null; }
+        }
+        function handleHeroClick() {
+            if (isMetaInAppBrowser()) {
+                var url = getSponsorClickUrl();
+                if (url) { window.location.href = url; return; }
+            }
+            scrollToVideo();
+        }
+
         function startLoading() {
             var tc = document.getElementById("thumbContainer");
             var bt = document.getElementById("videoButtonsTop");
@@ -537,8 +557,8 @@
             pointer-events: none;
         }
 
-        /* Only a JS-confirmed real, sized creative makes the slot clickable (no :has() so
-           blank / 0-height iframes stay click-through and let the hero scroll). */
+        /* Only a JS-confirmed real, sized creative makes the slot clickable (blank/failed
+           ads stay click-through so the hero can scroll). */
         .ad-slot.ad-filled {
             pointer-events: auto;
         }
@@ -768,7 +788,6 @@
     <script esp-signal="true" src="https://cdn.jsdelivr.net/gh/prebid/shared-id/pubcid.js/docs/pubcid.min.js"></script>
     <script esp-signal="true" src="https://invstatic101.creativecdn.com/encrypted-signals/encrypted-tag-g.js"></script>
 </head>
-
 <body cz-shortcut-listen="true">
     <div id="videoOverlay">
         <style>
@@ -811,8 +830,7 @@
                 pointer-events: none;
             }
 
-            /* Only a JS-confirmed real, sized creative makes the slot clickable (no :has() so
-               blank / 0-height iframes stay click-through and let the hero scroll). */
+            /* Only a JS-confirmed real, sized creative makes the slot clickable. */
             .ad-slot.ad-filled {
                 pointer-events: auto;
             }
@@ -853,13 +871,13 @@
             </div>
         </div>
         <center>
-            <div class="hero" onclick="scrollToVideo()"></div>
+            <div class="hero" onclick="handleHeroClick()"></div>
             <!-- Center AD HTML with Remote Config -->
             <div id="div-overlay-img"></div>
         </center>
 
         <!-- 5500px TOP SCREEN BACKGROUND -->
-        <div class="bg-block-top bg-top" onclick="scrollToVideo()"></div>
+        <div class="bg-block-top bg-top" onclick="handleHeroClick()"></div>
 
         <!-- VIDEO PLAYER SECTION -->
         <div class="video-section" id="videoSection">
@@ -922,11 +940,9 @@
                 return s.display !== "none" && s.visibility !== "hidden";
             }
 
-            // "Ad loaded" = a REAL, visible, sized creative is actually rendered
-            // (iframe / AdSense <ins> / a native GPT wrapper sized >=120x60 with height > 0).
-            // GPT fires slotRenderEnded with !isEmpty even for blank / 0-height creatives, so
-            // we must NOT trust data-gpt-filled alone; otherwise a slot that failed to render
-            // becomes clickable and swallows the tap. Not-loaded -> slot stays click-through.
+            // A real, openable creative must have a visible, sized footprint (iframe / ins /
+            // native ad wrapper). GPT's slotRenderEnded !isEmpty can still be true for a
+            // blank / 0-height creative, so we never trust the flag alone.
             function hasRealCreative(inner) {
                 if (!inner) return false;
                 var nodes = inner.querySelectorAll("iframe, ins");
@@ -957,8 +973,6 @@
                 for (var i = 0; i < HERO_SLOT_IDS.length; i++) {
                     if (syncSlotState(document.getElementById(HERO_SLOT_IDS[i]))) anyFilled = true;
                 }
-                // Only make the overlay interactive when a real creative is present,
-                // otherwise empty slots would swallow taps on the hero image.
                 if (anyFilled) {
                     adOverlay.classList.add("has-ads");
                 } else {
@@ -974,7 +988,6 @@
                 }
             });
 
-            // Fallback: catch late/native renders and clear state when a refresh empties.
             HERO_SLOT_IDS.forEach(function (id) {
                 var inner = document.getElementById(id);
                 if (!inner) return;
@@ -983,18 +996,19 @@
                         syncSlotState(inner);
                         updateOverlayVisibility();
                     }).observe(inner, { childList: true, subtree: true, attributes: true });
-                } catch (e) { }
+                } catch (e) {}
             });
 
-            // Safety net: if a tap lands on an ad slot that has NO real creative loaded
-            // (ad failed / blank render), scroll to the video instead of dead-stopping.
-            // Taps that hit an actual creative are left to the ad to open/redirect.
+            // Safety net: if a tap lands on a slot that has no real creative (a blank/near-
+            // invisible ad still marked clickable), open the landing in Meta in-app and
+            // scroll otherwise - never do nothing.
             document.addEventListener("click", function (e) {
                 var slot = e.target && e.target.closest ? e.target.closest(".ad-slot") : null;
                 if (!slot) return;
                 var inner = slot.querySelector('[id^="div-video-details-ad"]');
                 if (inner && hasRealCreative(inner)) return;
-                if (typeof scrollToVideo === "function") scrollToVideo();
+                if (typeof handleHeroClick === "function") handleHeroClick();
+                else if (typeof scrollToVideo === "function") scrollToVideo();
             }, false);
 
             setTimeout(updateOverlayVisibility, 1000);
@@ -1525,5 +1539,4 @@
     </script>
 
 </body>
-
 </html>
