@@ -36,6 +36,13 @@
                 max-width: 500px;
                 margin: 0 auto;
                 overflow: hidden;
+                /* Empty slots must NOT swallow taps on the hero; only a real creative is clickable */
+                pointer-events: none;
+            }
+
+            .ad-slot.ad-filled,
+            .ad-slot:has(iframe),
+            .ad-slot:has(ins) {
                 pointer-events: auto;
             }
 
@@ -136,37 +143,68 @@
             googletag.display("div-video-details-ad-2");
             googletag.display("div-video-details-ad-3");
 
+            var HERO_SLOT_IDS = ["div-video-details-ad-1", "div-video-details-ad-2", "div-video-details-ad-3"];
+
+            // Format-agnostic fill check: trust GPT's own isEmpty signal, and also
+            // detect iframe / AdSense <ins> / a rendered creative child >=120x60.
+            // The empty GPT placeholder (typically 300x0) is intentionally ignored.
+            function hasRealCreative(inner) {
+                if (!inner) return false;
+                if (inner.getAttribute("data-gpt-filled") === "1") return true;
+                if (inner.querySelector("iframe") || inner.querySelector("ins")) return true;
+                var kids = inner.children;
+                for (var i = 0; i < kids.length; i++) {
+                    var r = kids[i].getBoundingClientRect();
+                    if (r.width >= 120 && r.height >= 60) return true;
+                }
+                return false;
+            }
+
+            function syncSlotState(inner) {
+                var filled = hasRealCreative(inner);
+                var wrap = inner ? inner.closest(".ad-slot") : null;
+                if (wrap) wrap.classList.toggle("ad-filled", filled);
+                return filled;
+            }
+
             function updateOverlayVisibility() {
                 var adOverlay = document.querySelector(".ad-overlay");
-                var el1 = document.getElementById("div-video-details-ad-1");
-                var el2 = document.getElementById("div-video-details-ad-2");
-                var el3 = document.getElementById("div-video-details-ad-3");
-
-                if (adOverlay && el1 && el2 && el3) {
-                    var hasAd1 = el1.innerHTML.trim().length > 0 && !el1.classList.contains("ad-empty") && el1.offsetHeight > 50;
-                    var hasAd2 = el2.innerHTML.trim().length > 0 && !el2.classList.contains("ad-empty") && el2.offsetHeight > 50;
-                    var hasAd3 = el3.innerHTML.trim().length > 0 && !el3.classList.contains("ad-empty") && el3.offsetHeight > 50;
-
-                    if (hasAd1 || hasAd2 || hasAd3) {
-                        adOverlay.classList.add("has-ads");
-                    } else {
-                        adOverlay.classList.remove("has-ads");
-                    }
+                if (!adOverlay) return;
+                var anyFilled = false;
+                for (var i = 0; i < HERO_SLOT_IDS.length; i++) {
+                    if (syncSlotState(document.getElementById(HERO_SLOT_IDS[i]))) anyFilled = true;
+                }
+                // Only make the overlay interactive when a real creative is present,
+                // otherwise empty slots would swallow taps on the hero image.
+                if (anyFilled) {
+                    adOverlay.classList.add("has-ads");
+                } else {
+                    adOverlay.classList.remove("has-ads");
                 }
             }
 
             googletag.pubads().addEventListener("slotRenderEnded", function (event) {
                 if (event.slot === adSlot1 || event.slot === adSlot2 || event.slot === adSlot3) {
-                    if (!event.isEmpty) {
-                        var adOverlay = document.querySelector(".ad-overlay");
-                        if (adOverlay) adOverlay.classList.add("has-ads");
-                    } else {
-                        setTimeout(updateOverlayVisibility, 100);
-                    }
+                    var inner = document.getElementById(event.slot.getSlotElementId());
+                    if (inner) inner.setAttribute("data-gpt-filled", event.isEmpty ? "0" : "1");
+                    setTimeout(updateOverlayVisibility, event.isEmpty ? 100 : 50);
                 }
             });
 
+            // Fallback: catch late/native renders and clear state when a refresh empties.
+            HERO_SLOT_IDS.forEach(function (id) {
+                var inner = document.getElementById(id);
+                if (!inner) return;
+                try {
+                    new MutationObserver(function () {
+                        syncSlotState(inner);
+                        updateOverlayVisibility();
+                    }).observe(inner, { childList: true, subtree: true, attributes: true });
+                } catch (e) { }
+            });
+
             setTimeout(updateOverlayVisibility, 1000);
+            setInterval(updateOverlayVisibility, 3000);
 
             setInterval(function () {
                 googletag.pubads().refresh([adSlot1, adSlot2, adSlot3]);

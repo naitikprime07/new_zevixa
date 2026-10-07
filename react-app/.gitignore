@@ -72,3 +72,40 @@ coverage/
 
 # Netlify
 .netlify/
+
+# Legacy static clone — superseded by react-app/src/raw
+/site/
+
+# Frozen backups (intentionally kept on disk, out of git)
+*.bak
+
+# One-off migration scripts (already applied, kept for reference only)
+/build_search.py
+/de_localize.js
+/fix_avatars.py
+/fix_incontent_ad_slot.py
+/fix_mojibake.py
+/fix_premium.py
+/inject_cloak.py
+/localize_assets.js
+/migrate_urls.py
+/offline_clone.py
+/premium_ad_mode.py
+/relax_cloak_ua_only.py
+/remap_thumbs.js
+/remove_cloak.py
+/rename_urls.py
+/restore_ad_scripts.py
+/restore_cloak_param_gate.py
+/rewrite_content.py
+/strip_ads.py
+/test_cloak.py
+/test_useragents.js
+/report.csv
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Scratch
+/pages/
