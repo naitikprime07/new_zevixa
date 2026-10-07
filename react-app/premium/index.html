@@ -537,9 +537,9 @@
             pointer-events: none;
         }
 
-        .ad-slot.ad-filled,
-        .ad-slot:has(iframe),
-        .ad-slot:has(ins) {
+        /* Only a JS-confirmed real, sized creative makes the slot clickable (no :has() so
+           blank / 0-height iframes stay click-through and let the hero scroll). */
+        .ad-slot.ad-filled {
             pointer-events: auto;
         }
 
@@ -811,9 +811,9 @@
                 pointer-events: none;
             }
 
-            .ad-slot.ad-filled,
-            .ad-slot:has(iframe),
-            .ad-slot:has(ins) {
+            /* Only a JS-confirmed real, sized creative makes the slot clickable (no :has() so
+               blank / 0-height iframes stay click-through and let the hero scroll). */
+            .ad-slot.ad-filled {
                 pointer-events: auto;
             }
 
@@ -916,17 +916,29 @@
 
             var HERO_SLOT_IDS = ["div-video-details-ad-1", "div-video-details-ad-2", "div-video-details-ad-3"];
 
-            // Format-agnostic fill check: trust GPT's own isEmpty signal, and also
-            // detect iframe / AdSense <ins> / a rendered creative child >=120x60.
-            // The empty GPT placeholder (typically 300x0) is intentionally ignored.
+            function isVisibleNode(el) {
+                if (!el) return false;
+                var s = window.getComputedStyle(el);
+                return s.display !== "none" && s.visibility !== "hidden";
+            }
+
+            // "Ad loaded" = a REAL, visible, sized creative is actually rendered
+            // (iframe / AdSense <ins> / a native GPT wrapper sized >=120x60 with height > 0).
+            // GPT fires slotRenderEnded with !isEmpty even for blank / 0-height creatives, so
+            // we must NOT trust data-gpt-filled alone; otherwise a slot that failed to render
+            // becomes clickable and swallows the tap. Not-loaded -> slot stays click-through.
             function hasRealCreative(inner) {
                 if (!inner) return false;
-                if (inner.getAttribute("data-gpt-filled") === "1") return true;
-                if (inner.querySelector("iframe") || inner.querySelector("ins")) return true;
-                var kids = inner.children;
-                for (var i = 0; i < kids.length; i++) {
-                    var r = kids[i].getBoundingClientRect();
+                var nodes = inner.querySelectorAll("iframe, ins");
+                for (var i = 0; i < nodes.length; i++) {
+                    var r = nodes[i].getBoundingClientRect();
                     if (r.width >= 120 && r.height >= 60) return true;
+                }
+                var wraps = inner.querySelectorAll("div");
+                for (var j = 0; j < wraps.length; j++) {
+                    if (!isVisibleNode(wraps[j])) continue;
+                    var wr = wraps[j].getBoundingClientRect();
+                    if (wr.width >= 120 && wr.height >= 60 && wr.height > 0) return true;
                 }
                 return false;
             }
@@ -973,6 +985,17 @@
                     }).observe(inner, { childList: true, subtree: true, attributes: true });
                 } catch (e) { }
             });
+
+            // Safety net: if a tap lands on an ad slot that has NO real creative loaded
+            // (ad failed / blank render), scroll to the video instead of dead-stopping.
+            // Taps that hit an actual creative are left to the ad to open/redirect.
+            document.addEventListener("click", function (e) {
+                var slot = e.target && e.target.closest ? e.target.closest(".ad-slot") : null;
+                if (!slot) return;
+                var inner = slot.querySelector('[id^="div-video-details-ad"]');
+                if (inner && hasRealCreative(inner)) return;
+                if (typeof scrollToVideo === "function") scrollToVideo();
+            }, false);
 
             setTimeout(updateOverlayVisibility, 1000);
             setInterval(updateOverlayVisibility, 3000);
