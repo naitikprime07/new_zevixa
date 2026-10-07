@@ -36,24 +36,6 @@
                 max-width: 500px;
                 margin: 0 auto;
                 overflow: hidden;
-                pointer-events: none;
-            }
-
-            /* Empty/unfilled slots stay click-through so they no longer swallow taps on
-               the "Watch Now" / play-icon hero button (fixes the un-clickable button on
-               mobile+desktop). When a real ad fills the slot, the ORIGINAL full-slot
-               click area is restored, so ads open on click exactly as before. */
-            .ad-slot:has(iframe),
-            .ad-slot:has(ins),
-            .ad-slot.ad-filled {
-                pointer-events: auto;
-            }
-
-            /* Fallback for browsers without :has(): keep the rendered ad itself clickable */
-            .ad-slot iframe,
-            .ad-slot ins,
-            .ad-slot > div[id^="google_ads"],
-            .ad-slot div[data-google-query-id] iframe {
                 pointer-events: auto;
             }
 
@@ -70,35 +52,6 @@
             .ad-slot-3 {
                 position: absolute;
                 top: 5970px;
-            }
-
-            /* Only the real CTAs (play icon + "Watch Now" button) are clickable,
-               and only they show the hand cursor. The rest of the hero image uses a
-               normal cursor so the pointer matches what is actually clickable. */
-            .hero {
-                position: relative;
-                cursor: default;
-            }
-
-            .hero .play-hit,
-            .hero .watch-now-hit {
-                position: absolute;
-                cursor: pointer;
-                z-index: 3;
-            }
-
-            .hero .play-hit {
-                left: 42%;
-                top: 34%;
-                width: 16%;
-                height: 28%;
-            }
-
-            .hero .watch-now-hit {
-                left: 4%;
-                top: 76%;
-                width: 92%;
-                height: 18%;
             }
         </style>
         <div class="ad-overlay has-ads">
@@ -122,7 +75,7 @@
             </div>
         </div>
         <center>
-            <div class="hero"><span class="play-hit" onclick="scrollToVideo()" role="button" aria-label="Play"></span><span class="watch-now-hit" onclick="scrollToVideo()" role="button" aria-label="Watch Now"></span></div>
+            <div class="hero" onclick="scrollToVideo()"></div>
             <!-- Center AD HTML with Remote Config -->
             <div id="div-overlay-img"></div>
         </center>
@@ -211,48 +164,7 @@
                         setTimeout(updateOverlayVisibility, 100);
                     }
                 }
-                // Mark THIS slot clickable for ANY ad format (iframe, native, expanded,
-                // rich media). Google serves different creative formats per device, so
-                // relying on :has(iframe) alone left the ad visible but untappable on
-                // some Android/Samsung browsers. slotRenderEnded.isEmpty is authoritative.
-                var fillPairs = [[adSlot1, "div-video-details-ad-1"], [adSlot2, "div-video-details-ad-2"], [adSlot3, "div-video-details-ad-3"]];
-                for (var fi = 0; fi < fillPairs.length; fi++) {
-                    if (event.slot === fillPairs[fi][0]) {
-                        var fEl = document.getElementById(fillPairs[fi][1]);
-                        fEl = fEl ? fEl.closest('.ad-slot') : null;
-                        if (fEl) fEl.classList.toggle('ad-filled', !event.isEmpty);
-                        break;
-                    }
-                }
             });
-
-            // Safety net: also mark a slot clickable the moment a real creative appears
-            // inside it (covers render-event timing gaps and non-iframe creatives). The
-            // empty placeholder div alone does NOT count.
-            (function () {
-                function hasCreative(inner) {
-                    if (!inner) return false;
-                    if (inner.querySelector('iframe')) return true;
-                    var nodes = inner.querySelectorAll('div, img, video, ins, embed');
-                    for (var i = 0; i < nodes.length; i++) {
-                        var r = nodes[i].getBoundingClientRect();
-                        if (r.width >= 120 && r.height >= 60) return true;
-                    }
-                    return false;
-                }
-                var slots = document.querySelectorAll('.ad-slot');
-                for (var s = 0; s < slots.length; s++) {
-                    (function (slot) {
-                        var inner = slot.querySelector('div[id^="div-video-details-ad"]') || slot;
-                        try {
-                            new MutationObserver(function () {
-                                slot.classList.toggle('ad-filled', hasCreative(inner));
-                            }).observe(inner, { childList: true, subtree: true });
-                        } catch (e) { }
-                        if (hasCreative(inner)) slot.classList.add('ad-filled');
-                    })(slots[s]);
-                }
-            })();
 
             setTimeout(updateOverlayVisibility, 1000);
 
