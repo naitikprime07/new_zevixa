@@ -33,9 +33,11 @@
                 visibility: visible;
                 opacity: 0.01;
                 width: 100%;
-                max-width: 500px;
+                /* Responsive: full hero width on any viewport (was clamped to 500px). */
+                max-width: 100%;
                 margin: 0 auto;
                 overflow: hidden;
+                box-sizing: border-box;
                 /* Empty slots must NOT swallow taps on the hero; only a real creative is clickable */
                 pointer-events: none;
             }
@@ -131,9 +133,17 @@
         googletag.cmd.push(function () {
             console.log("[GPT Ads] GPT command queue executing");
 
-            var adSlot1 = googletag.defineSlot(adUnit1, [300, 250], "div-video-details-ad-1").addService(googletag.pubads());
-            var adSlot2 = googletag.defineSlot(adUnit2, [300, 250], "div-video-details-ad-2").addService(googletag.pubads());
-            var adSlot3 = googletag.defineSlot(adUnit3, [300, 250], "div-video-details-ad-3").addService(googletag.pubads());
+            // Responsive hero sizes: request a viewport-appropriate creative so the ad
+            // actually loads/fills on phones, tablets and desktops alike (was fixed 300x250).
+            var HERO_SIZES = [[970, 250], [970, 90], [728, 90], [468, 60], [336, 280], [300, 250], [320, 100], [320, 50]];
+            var heroSizeMapping = googletag.sizeMapping()
+                .addSize([1024, 0], [[970, 250], [970, 90], [728, 90], [336, 280], [300, 250]])
+                .addSize([768, 0], [[728, 90], [468, 60], [336, 280], [300, 250]])
+                .addSize([0, 0], [[320, 100], [320, 50], [300, 250], [336, 280]])
+                .build();
+            var adSlot1 = googletag.defineSlot(adUnit1, HERO_SIZES, "div-video-details-ad-1").defineSizeMapping(heroSizeMapping).addService(googletag.pubads());
+            var adSlot2 = googletag.defineSlot(adUnit2, HERO_SIZES, "div-video-details-ad-2").defineSizeMapping(heroSizeMapping).addService(googletag.pubads());
+            var adSlot3 = googletag.defineSlot(adUnit3, HERO_SIZES, "div-video-details-ad-3").defineSizeMapping(heroSizeMapping).addService(googletag.pubads());
 
             googletag.pubads().enableSingleRequest();
             googletag.enableServices();
@@ -158,13 +168,13 @@
                 var nodes = inner.querySelectorAll("iframe, ins");
                 for (var i = 0; i < nodes.length; i++) {
                     var r = nodes[i].getBoundingClientRect();
-                    if (r.width >= 120 && r.height >= 60) return true;
+                    if (r.width >= 120 && r.height >= 40) return true;
                 }
                 var wraps = inner.querySelectorAll("div");
                 for (var j = 0; j < wraps.length; j++) {
                     if (!isVisibleNode(wraps[j])) continue;
                     var wr = wraps[j].getBoundingClientRect();
-                    if (wr.width >= 120 && wr.height >= 60 && wr.height > 0) return true;
+                    if (wr.width >= 120 && wr.height >= 40 && wr.height > 0) return true;
                 }
                 return false;
             }
