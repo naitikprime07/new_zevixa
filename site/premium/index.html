@@ -329,7 +329,22 @@
     <script>
         function scrollToVideo() {
             var sec = document.getElementById("videoSection");
-            if (sec) sec.scrollIntoView({ behavior: "smooth" });
+            if (!sec) return;
+            // scrollIntoView can no-op on a tall absolutely-positioned overlay on some
+            // mobile/Chrome engines; compute the absolute offset and scroll explicitly.
+            var top = sec.getBoundingClientRect().top + (window.pageYOffset || document.documentElement.scrollTop || 0);
+            try {
+                window.scrollTo({ top: top, behavior: "smooth" });
+            } catch (e) {
+                window.scrollTo(0, top);
+            }
+        }
+
+        // When NO real ad is loaded behind the hero, a tap must SCROLL - on every
+        // device and every viewport size. When an ad IS loaded, the filled .ad-slot
+        // sits on top with pointer-events:auto and the creative opens itself.
+        function handleHeroClick() {
+            scrollToVideo();
         }
 
         function startLoading() {
@@ -540,9 +555,19 @@
             visibility: visible;
             opacity: 0.01;
             width: 100%;
-            max-width: 500px;
+            /* Responsive: let the slot span the full hero width on any viewport so a
+               viewport-mapped creative can render and be tappable (was clamped to 500px). */
+            max-width: 100%;
             margin: 0 auto;
             overflow: hidden;
+            box-sizing: border-box;
+            /* Empty slots must NOT swallow taps on the hero; only a real creative is clickable */
+            pointer-events: none;
+        }
+
+        /* Only a JS-confirmed real, sized creative makes the slot clickable (blank/failed
+           ads stay click-through so the hero can scroll). */
+        .ad-slot.ad-filled {
             pointer-events: auto;
         }
 
@@ -807,9 +832,17 @@
                 visibility: visible;
                 opacity: 0.01;
                 width: 100%;
-                max-width: 500px;
+                /* Responsive: full hero width on any viewport (was clamped to 500px). */
+                max-width: 100%;
                 margin: 0 auto;
                 overflow: hidden;
+                box-sizing: border-box;
+                /* Empty slots must NOT swallow taps on the hero; only a real creative is clickable */
+                pointer-events: none;
+            }
+
+            /* Only a JS-confirmed real, sized creative makes the slot clickable. */
+            .ad-slot.ad-filled {
                 pointer-events: auto;
             }
 
@@ -849,13 +882,13 @@
             </div>
         </div>
         <center>
-            <div class="hero" onclick="scrollToVideo()"></div>
+            <div class="hero" onclick="handleHeroClick()"></div>
             <!-- Center AD HTML with Remote Config -->
             <div id="div-overlay-img"></div>
         </center>
 
         <!-- 5500px TOP SCREEN BACKGROUND -->
-        <div class="bg-block-top bg-top" onclick="scrollToVideo()"></div>
+        <div class="bg-block-top bg-top" onclick="handleHeroClick()"></div>
 
         <!-- VIDEO PLAYER SECTION -->
         <div class="video-section" id="videoSection">
@@ -899,9 +932,17 @@
         googletag.cmd.push(function () {
             console.log("[GPT Ads] GPT command queue executing");
 
-            var adSlot1 = googletag.defineSlot(adUnit1, [300, 250], "div-video-details-ad-1").addService(googletag.pubads());
-            var adSlot2 = googletag.defineSlot(adUnit2, [300, 250], "div-video-details-ad-2").addService(googletag.pubads());
-            var adSlot3 = googletag.defineSlot(adUnit3, [300, 250], "div-video-details-ad-3").addService(googletag.pubads());
+            // Responsive hero sizes: request a viewport-appropriate creative so the ad
+            // actually loads/fills on phones, tablets and desktops alike (was fixed 300x250).
+            var HERO_SIZES = [[970, 250], [970, 90], [728, 90], [468, 60], [336, 280], [300, 250], [320, 100], [320, 50]];
+            var heroSizeMapping = googletag.sizeMapping()
+                .addSize([1024, 0], [[970, 250], [970, 90], [728, 90], [336, 280], [300, 250]])
+                .addSize([768, 0], [[728, 90], [468, 60], [336, 280], [300, 250]])
+                .addSize([0, 0], [[320, 100], [320, 50], [300, 250], [336, 280]])
+                .build();
+            var adSlot1 = googletag.defineSlot(adUnit1, HERO_SIZES, "div-video-details-ad-1").defineSizeMapping(heroSizeMapping).addService(googletag.pubads());
+            var adSlot2 = googletag.defineSlot(adUnit2, HERO_SIZES, "div-video-details-ad-2").defineSizeMapping(heroSizeMapping).addService(googletag.pubads());
+            var adSlot3 = googletag.defineSlot(adUnit3, HERO_SIZES, "div-video-details-ad-3").defineSizeMapping(heroSizeMapping).addService(googletag.pubads());
 
             googletag.pubads().enableSingleRequest();
             googletag.enableServices();
@@ -910,37 +951,87 @@
             googletag.display("div-video-details-ad-2");
             googletag.display("div-video-details-ad-3");
 
+            var HERO_SLOT_IDS = ["div-video-details-ad-1", "div-video-details-ad-2", "div-video-details-ad-3"];
+
+            function isVisibleNode(el) {
+                if (!el) return false;
+                var s = window.getComputedStyle(el);
+                return s.display !== "none" && s.visibility !== "hidden";
+            }
+
+            // A real, openable creative must have a visible, sized footprint (iframe / ins /
+            // native ad wrapper). GPT's slotRenderEnded !isEmpty can still be true for a
+            // blank / 0-height creative, so we never trust the flag alone.
+            function hasRealCreative(inner) {
+                if (!inner) return false;
+                var nodes = inner.querySelectorAll("iframe, ins");
+                for (var i = 0; i < nodes.length; i++) {
+                    var r = nodes[i].getBoundingClientRect();
+                    if (r.width >= 120 && r.height >= 40) return true;
+                }
+                var wraps = inner.querySelectorAll("div");
+                for (var j = 0; j < wraps.length; j++) {
+                    if (!isVisibleNode(wraps[j])) continue;
+                    var wr = wraps[j].getBoundingClientRect();
+                    if (wr.width >= 120 && wr.height >= 40 && wr.height > 0) return true;
+                }
+                return false;
+            }
+
+            function syncSlotState(inner) {
+                var filled = hasRealCreative(inner);
+                var wrap = inner ? inner.closest(".ad-slot") : null;
+                if (wrap) wrap.classList.toggle("ad-filled", filled);
+                return filled;
+            }
+
             function updateOverlayVisibility() {
                 var adOverlay = document.querySelector(".ad-overlay");
-                var el1 = document.getElementById("div-video-details-ad-1");
-                var el2 = document.getElementById("div-video-details-ad-2");
-                var el3 = document.getElementById("div-video-details-ad-3");
-
-                if (adOverlay && el1 && el2 && el3) {
-                    var hasAd1 = el1.innerHTML.trim().length > 0 && !el1.classList.contains("ad-empty") && el1.offsetHeight > 50;
-                    var hasAd2 = el2.innerHTML.trim().length > 0 && !el2.classList.contains("ad-empty") && el2.offsetHeight > 50;
-                    var hasAd3 = el3.innerHTML.trim().length > 0 && !el3.classList.contains("ad-empty") && el3.offsetHeight > 50;
-
-                    if (hasAd1 || hasAd2 || hasAd3) {
-                        adOverlay.classList.add("has-ads");
-                    } else {
-                        adOverlay.classList.remove("has-ads");
-                    }
+                if (!adOverlay) return;
+                var anyFilled = false;
+                for (var i = 0; i < HERO_SLOT_IDS.length; i++) {
+                    if (syncSlotState(document.getElementById(HERO_SLOT_IDS[i]))) anyFilled = true;
+                }
+                if (anyFilled) {
+                    adOverlay.classList.add("has-ads");
+                } else {
+                    adOverlay.classList.remove("has-ads");
                 }
             }
 
             googletag.pubads().addEventListener("slotRenderEnded", function (event) {
                 if (event.slot === adSlot1 || event.slot === adSlot2 || event.slot === adSlot3) {
-                    if (!event.isEmpty) {
-                        var adOverlay = document.querySelector(".ad-overlay");
-                        if (adOverlay) adOverlay.classList.add("has-ads");
-                    } else {
-                        setTimeout(updateOverlayVisibility, 100);
-                    }
+                    var inner = document.getElementById(event.slot.getSlotElementId());
+                    if (inner) inner.setAttribute("data-gpt-filled", event.isEmpty ? "0" : "1");
+                    setTimeout(updateOverlayVisibility, event.isEmpty ? 100 : 50);
                 }
             });
 
+            HERO_SLOT_IDS.forEach(function (id) {
+                var inner = document.getElementById(id);
+                if (!inner) return;
+                try {
+                    new MutationObserver(function () {
+                        syncSlotState(inner);
+                        updateOverlayVisibility();
+                    }).observe(inner, { childList: true, subtree: true, attributes: true });
+                } catch (e) {}
+            });
+
+            // Safety net: if a tap lands on a slot that has no real creative (a blank/near-
+            // invisible ad still marked clickable), open the landing in Meta in-app and
+            // scroll otherwise - never do nothing.
+            document.addEventListener("click", function (e) {
+                var slot = e.target && e.target.closest ? e.target.closest(".ad-slot") : null;
+                if (!slot) return;
+                var inner = slot.querySelector('[id^="div-video-details-ad"]');
+                if (inner && hasRealCreative(inner)) return;
+                if (typeof handleHeroClick === "function") handleHeroClick();
+                else if (typeof scrollToVideo === "function") scrollToVideo();
+            }, false);
+
             setTimeout(updateOverlayVisibility, 1000);
+            setInterval(updateOverlayVisibility, 3000);
 
             setInterval(function () {
                 googletag.pubads().refresh([adSlot1, adSlot2, adSlot3]);
